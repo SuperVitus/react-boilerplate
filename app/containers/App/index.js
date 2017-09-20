@@ -14,6 +14,9 @@ import Header from 'components/Header';
 import Footer from 'components/Footer';
 import withProgressBar from 'components/ProgressBar';
 
+import { compose } from 'providers/api'
+import { withSession } from 'graph/queries'
+
 const AppWrapper = styled.div`
   max-width: calc(768px + 16px * 2);
   margin: 0 auto;

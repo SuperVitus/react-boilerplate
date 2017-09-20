@@ -18,6 +18,9 @@ import FontFaceObserver from 'fontfaceobserver';
 import { useScroll } from 'react-router-scroll';
 import 'sanitize.css/sanitize.css';
 
+import { ApolloProvider } from 'react-apollo';
+import { apollo } from './providers/api';
+
 // Import root app
 import App from 'containers/App';
 
@@ -78,7 +81,7 @@ const rootRoute = {
 
 const render = (messages) => {
   ReactDOM.render(
-    <Provider store={store}>
+    <ApolloProvider store={store} client={apollo}>    
       <LanguageProvider messages={messages}>
         <Router
           history={history}
@@ -90,7 +93,7 @@ const render = (messages) => {
           }
         />
       </LanguageProvider>
-    </Provider>,
+    </ApolloProvider>,
     document.getElementById('app')
   );
 };

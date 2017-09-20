@@ -6,8 +6,8 @@ import isString from 'lodash/isString';
 import invariant from 'invariant';
 import warning from 'warning';
 
-import createReducer from '../reducers';
-
+// import createReducer from '../reducers';
+// import createReducer from '_app/reducers';
 /**
  * Validate the shape of redux store
  */
@@ -29,7 +29,7 @@ export function checkStore(store) {
 /**
  * Inject an asynchronously loaded reducer
  */
-export function injectAsyncReducer(store, isValid) {
+export function injectAsyncReducer(createReducer, store, isValid) {
   return function injectReducer(name, asyncReducer) {
     if (!isValid) checkStore(store);
 
@@ -48,7 +48,7 @@ export function injectAsyncReducer(store, isValid) {
 /**
  * Inject an asynchronously loaded saga
  */
-export function injectAsyncSagas(store, isValid) {
+export function injectAsyncSagas(createReducer, store, isValid) {
   return function injectSagas(sagas) {
     if (!isValid) checkStore(store);
 
@@ -69,11 +69,19 @@ export function injectAsyncSagas(store, isValid) {
 /**
  * Helper for creating injectors
  */
-export function getAsyncInjectors(store) {
+export function getAsyncInjectors(createReducer, store) {
   checkStore(store);
 
   return {
-    injectReducer: injectAsyncReducer(store, true),
-    injectSagas: injectAsyncSagas(store, true),
+    injectReducer: injectAsyncReducer(createReducer, store, true),
+    injectSagas: injectAsyncSagas(createReducer, store, true),
   };
 }
+
+export const errorLoading = (err) => {
+  console.error('Dynamic page loading failed', err); // eslint-disable-line no-console
+};
+
+export const loadModule = (cb) => (componentModule) => {
+  cb(null, componentModule.default);
+};

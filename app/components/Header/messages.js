@@ -14,4 +14,8 @@ export default defineMessages({
     id: 'boilerplate.components.Header.features',
     defaultMessage: 'Features',
   },
+  apollo: {
+    id: 'boilerplate.components.Header.apollo',
+    defaultMessage: 'Apollo',
+  },
 });

@@ -3,6 +3,7 @@
 // See http://blog.mxstbr.com/2016/01/react-apps-with-pages for more information
 // about the code splitting business
 import { getAsyncInjectors } from './utils/asyncInjectors';
+import createReducer from './reducers';
 
 const errorLoading = (err) => {
   console.error('Dynamic page loading failed', err); // eslint-disable-line no-console
@@ -14,8 +15,8 @@ const loadModule = (cb) => (componentModule) => {
 
 export default function createRoutes(store) {
   // create reusable async injectors using getAsyncInjectors factory
-  const { injectReducer, injectSagas } = getAsyncInjectors(store);
-
+  const { injectReducer, injectSagas } = getAsyncInjectors(createReducer, store);
+  
   return [
     {
       path: '/',
@@ -43,6 +44,14 @@ export default function createRoutes(store) {
       name: 'features',
       getComponent(nextState, cb) {
         import('containers/FeaturePage')
+          .then(loadModule(cb))
+          .catch(errorLoading);
+      },
+    }, {
+      path: '/apollo',
+      name: 'apollo',
+      getComponent(nextState, cb) {
+        import('containers/ApolloClientPage')
           .then(loadModule(cb))
           .catch(errorLoading);
       },
