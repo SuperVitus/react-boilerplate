@@ -239,6 +239,7 @@
     "reselect": "2.5.4",
     "sanitize.css": "4.1.0",
     "styled-components": "1.1.2",
+    "subscriptions-transport-ws": "^0.8.3",
     "warning": "3.0.0",
     "whatwg-fetch": "2.0.1"
   },

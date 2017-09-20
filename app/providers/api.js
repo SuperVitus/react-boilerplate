@@ -1,5 +1,7 @@
 import { ApolloClient, compose as _compose, gql as _gql, graphql as _graphql, createNetworkInterface } from 'react-apollo';
 import { createBatchingNetworkInterface } from 'apollo-client';
+import { SubscriptionClient, addGraphQLSubscriptions } from 'subscriptions-transport-ws';
+
 import { connect as _connect } from 'react-redux';
 
 import { SubmissionError } from 'redux-form/immutable';
@@ -10,9 +12,12 @@ import { isString, get, clone } from 'lodash'
 // Use this to point to a local API instance on a local development machine, and an external instance for all other hosts, if you wish.
 // This could/should probably be moved to some sort of Webpack options
 export const api_host = (location.hostname === 'localhost') ? 'http://localhost:8080' : 'https://api.hostname.com';
+const wsClient = new SubscriptionClient((location.hostname === 'localhost') ? 'ws://localhost:5000/subscriptions' : 'https://api.hostname.com', {
+  reconnect: true
+});
 
-const networkInterface = createBatchingNetworkInterface({
-  batchInterval: 100,
+const networkInterface = createNetworkInterface({
+  // batchInterval: 100,
   timeout: 10000, // not sure if this is even a real option
   uri: api_host + '/api/graph',
   method: 'POST',
@@ -21,7 +26,7 @@ const networkInterface = createBatchingNetworkInterface({
 
 networkInterface.use([
   {
-    applyBatchMiddleware(req, next) {
+    applyMiddleware(req, next) {
       if (!req.options.headers) {
         req.options.headers = {};
       }
@@ -39,8 +44,9 @@ networkInterface.use([
 ]);
 
 const logErrors = {
-  applyBatchAfterware(res, next) {
-    if (!res||!res.responses) {
+  applyAfterware(res, next) {
+    console.log(res)
+    if (!res||!res.response) {
       // response.clone().text().then(bodyText => {
         console.error(`Network Error: ${res}`);
         // console.error(`Network Error: ${response.status} (${response.statusText}) - ${bodyText}`);
@@ -59,10 +65,11 @@ const logErrors = {
     // }
   },
 };
-const responseHandler = {
-  applyBatchAfterware(res, next) {
 
-    var response = get(res,'responses[0]')
+const responseHandler = {
+  applyAfterware(response, next) {
+
+    // var response = get(res,'responses[0]')
 
     if(response.status==401){
       if(window.location.pathname !== '/auth/login'){
@@ -91,11 +98,16 @@ const responseHandler = {
 
 networkInterface.useAfter([responseHandler, logErrors]);
 
+const networkInterfaceWithSubscriptions = addGraphQLSubscriptions(
+  networkInterface,
+  wsClient
+);
+
 // by default, this client will send queries to `/graphql` (relative to the URL of your app)
 export const apollo = new ApolloClient({
-  networkInterface,
+  networkInterface : networkInterfaceWithSubscriptions,
   dataIdFromObject: (r) => r['uuid'],
-  shouldBatch: true,
+  // shouldBatch: true,
 });
 
 const createAxiosHeaders = ()=>{

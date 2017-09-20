@@ -8,15 +8,32 @@ import List from './List';
 import ListItem from './ListItem';
 import ListItemTitle from './ListItemTitle';
 
-import { serverStatusQuery } from 'graph/queries'
+import { serverStatusQuery, settingsQuery } from 'graph/queries'
 
 import { graphql, compose, gql } from 'providers/api'
-import { get } from 'lodash'
+import { get, map, keys } from 'lodash'
+
+import Form from './Form'
 
 class ApolloClientPage extends React.Component { // eslint-disable-line react/prefer-stateless-function
 
+  componentWillMount(props){
+    console.log(this.props.setting)
+    this.unsubscribe = this.props.settings.subscribeToMore({
+      document: gql`subscription {
+        SettingCreated { dataValues }
+      }`,
+      updateQuery: (previousResult, { subscriptionData, variables }) => {
+        const newSetting = subscriptionData.data[keys(subscriptionData.data)[0]].dataValues
+        return { ...previousResult, getSettings : [newSetting,...previousResult.getSettings] };
+      }
+    });
+  }
+
   render() {
-    const { serverStatus, serverStatusLoading } = this.props
+    const { serverStatus, settings } = this.props
+    const serverStatusData = get(serverStatus,'serverStatus') || {}
+
     return (
       <div>
         <Helmet
@@ -33,19 +50,24 @@ class ApolloClientPage extends React.Component { // eslint-disable-line react/pr
             <ListItemTitle>
               <FormattedMessage {...messages.serverStatusMessage} />
             </ListItemTitle>
-            { !!serverStatusLoading ? <p>Loading</p> : <div>
-              <p> Node Status : { serverStatus.nodeStatus } </p>
-              <p> Name : { serverStatus.name } </p>
-              <p> Uptime : { serverStatus.uptime } </p>
-              <p> Version : { serverStatus.version } </p>
-              <p> Id : { serverStatus.id } </p>
-              <p> Consumed Memory : { serverStatus.consumedMemoryMB } MB </p>
-              <p> Event Loop Delay : { serverStatus.consumedMemoryMB } s </p>
-              <p> Task Queue Depth : { serverStatus.resqueTotalQueueLength } Tasks </p>
+            { !!serverStatus.loading ? <p>Loading</p> : <div>
+              <p> Node Status : { serverStatusData.nodeStatus } </p>
+              <p> Name : { serverStatusData.name } </p>
+              <p> Uptime : { serverStatusData.uptime } </p>
+              <p> Version : { serverStatusData.version } </p>
+              <p> Id : { serverStatusData.id } </p>
+              <p> Consumed Memory : { serverStatusData.consumedMemoryMB } MB </p>
+              <p> Event Loop Delay : { serverStatusData.consumedMemoryMB } ms </p>
+              <p> Task Queue Depth : { serverStatusData.resqueTotalQueueLength } Tasks </p>
             </div>
             }
-              {/* { JSON.stringify(this.props.data.serverStatus) } */}
-              {/* <FormattedMessage {...messages.scaffoldingMessage} /> */}
+          </ListItem>
+          <ListItem>
+            <ListItemTitle>
+              Settings (Mutations)
+            </ListItemTitle>
+            <Form />
+            { settings.loading == false && map(settings.getSettings,set=><p>{ set.key }: { set.val}</p>) }
           </ListItem>
         </List>
       </div>
@@ -55,14 +77,13 @@ class ApolloClientPage extends React.Component { // eslint-disable-line react/pr
 
 export default compose(
   graphql(serverStatusQuery,{ 
-    props: ({ ownProps, data }) => ({
-      ...ownProps,
-      serverStatus: get(data,'serverStatus') || {},
-      serverStatusLoading: get(data,'loading'),
-      serverStatusRefetch: get(data,'refetch'),
-    }),
+    name : 'serverStatus',
     options : {
-      pollInterval: 5*1000, // poll for updates every five seconds
+      pollInterval: 10*1000,
     }
+  }),
+  graphql(settingsQuery,{ 
+    name : 'settings',
+    // options : {}
   })
 )(ApolloClientPage)
