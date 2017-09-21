@@ -5,6 +5,8 @@ import { get } from 'lodash'
 
 import { withCreateSettingMutation } from 'graph/mutations'
 
+import { TextField, SubmitButton } from 'components/FormInputs'
+
 class ApolloClientForm extends React.Component {
 
   render() {
@@ -13,9 +15,9 @@ class ApolloClientForm extends React.Component {
 
     return (
       <form onSubmit={handleSubmit(onSubmit)}>
-        <Field name='key' component='input' type='text' placeholder='key'/>
-        <Field name='val' component='input' type='text' placeholder='value'/>
-        <input type='submit'/>
+        <Field name='key' component={TextField} label='key' required/>
+        <Field name='val' component={TextField} label='value'/>
+        <SubmitButton />
       </form>
     );
   }
@@ -24,8 +26,9 @@ class ApolloClientForm extends React.Component {
 export default compose(
   withCreateSettingMutation,
   reduxForm({
-    form: 'ApolliClientPage_CreateSettingForm',
+    form: 'ApolloClientPage_CreateSettingForm',
     onSubmit: (val, dispatch, { createSetting, reset }) => {
+      console.log(val)
       console.log({ variables : val.toJS() })
       return createSetting({ variables : val.toJS() })
       .then(r=>dispatch(reset()))

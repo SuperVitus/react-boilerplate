@@ -16,6 +16,9 @@ import withProgressBar from 'components/ProgressBar';
 
 import { compose } from 'providers/api'
 import { withSession } from 'graph/queries'
+import { MuiThemeProvider, createMuiTheme } from 'material-ui/styles';
+
+import theme from './theme'
 
 const AppWrapper = styled.div`
   max-width: calc(768px + 16px * 2);
@@ -28,6 +31,7 @@ const AppWrapper = styled.div`
 
 export function App(props) {
   return (
+      <MuiThemeProvider theme={theme}>
     <AppWrapper>
       <Helmet
         titleTemplate="%s - React.js Boilerplate"
@@ -40,6 +44,7 @@ export function App(props) {
       {React.Children.toArray(props.children)}
       <Footer />
     </AppWrapper>
+      </MuiThemeProvider>
   );
 }
 
